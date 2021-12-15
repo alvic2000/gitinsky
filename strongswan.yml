@@ -1,0 +1,66 @@
+--
+- hosts: all
+  remote_user: root
+- name: Install strongswan on Ubuntu or Debian
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - strongswan 
+    - strongswan-pki
+    - libcharon-extra-plugins
+    - libcharon-extauth-plugins
+    - opensc 
+    - libengine-pkcs11-openssl1.1
+    - certbot
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Install strongswan on CentOS or RHEL
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - strongswan
+    - epel-release
+    - certbot
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: Create certificate
+  shell: >
+         certbot certonly --standalone -d "{{ item }}" &&
+         ln -s /etc/letsencrypt/live/"{{ item }}"/cert.pem /etc/strongswan/ipsec.d/cacerts/certificate.pem &&
+         ln -s /etc/letsencrypt/live/"{{ item }}"/fullchain.pem /etc/strongswan/ipsec.d/cacerts/fullchain.pem &&
+         ln -s /etc/letsencrypt/live/"{{ item }}"/privkey.pem /etc/strongswan/ipsec.d/private/key.pem &&
+  loop:
+    - domain.example.com
+
+- name: download /etc/strongswan/ipsec.secrects
+  get_url:
+    url: http://example.com/path/file.conf
+    dest: /etc/strongswan/ipsec.secrects
+
+- name: download /etc/strongswan/ipsec.conf
+  get_url:
+    url: http://example.com/path/file.conf
+    dest: /etc/strongswan/ipsec.conf
+
+- name: Replace a FQDN entry with our own
+  lineinfile:
+    path: /etc/strongswan/ipsec.secrects
+    regexp: 'domain.example.com'
+    line: "{{ item }}"
+  loop:
+    - domain.example.com
+
+- name: Replace a FQDN entry with our own
+  lineinfile:
+    path: /etc/strongswan/ipsec.conf
+    regexp: 'domain.example.com'
+    line: "{{ item }}"
+  loop:
+    - domain.example.com
+
+- name: Restart strongswan to pick up configuration changes
+  service:
+    name: strongswan
+    state: restarted
