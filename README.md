@@ -1,2 +1,2 @@
 # gitinsky
-atsks
+This project contains answers to test's questions.
