@@ -64,4 +64,5 @@
 - name: Restart strongswan to pick up configuration changes
   service:
     name: strongswan
+    enabled: yes
     state: restarted
