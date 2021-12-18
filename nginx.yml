@@ -49,3 +49,9 @@
     name: nginx
     state: restarted
     enabled: yes
+
+- name: Recursively remove git directory
+  file:
+    path: /tmp/getinsky
+    state: absent
+
