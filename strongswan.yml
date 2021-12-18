@@ -2,7 +2,7 @@
 - hosts: '{{ target }}'
   become: true
   remote_user: root
-- set_fact domain_name=domain.example.com
+- set_fact: domain_name=domain.example.com
 - name: Install strongswan on Ubuntu or Debian
   apt:
     name: "{{ item }}"
