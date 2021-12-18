@@ -2,6 +2,7 @@
 - hosts: '{{ target }}'
   become: true
   remote_user: root
+- set_fact domain_name=domain.example.com
 - name: Install strongswan on Ubuntu or Debian
   apt:
     name: "{{ item }}"
@@ -28,13 +29,11 @@
 
 - name: Create certificate
   shell: >
-         certbot certonly --standalone -d "{{ item }}" &&
-         ln -s /etc/letsencrypt/live/"{{ item }}"/cert.pem /etc/strongswan/ipsec.d/cacerts/certificate.pem &&
-         ln -s /etc/letsencrypt/live/"{{ item }}"/fullchain.pem /etc/strongswan/ipsec.d/cacerts/fullchain.pem &&
-         ln -s /etc/letsencrypt/live/"{{ item }}"/privkey.pem /etc/strongswan/ipsec.d/private/key.pem &&
-  loop:
-    - domain.example.com
-
+         certbot certonly --standalone -d "{{ domain_name }}" &&
+         ln -s /etc/letsencrypt/live/"{{ domain_name }}"/cert.pem /etc/strongswan/ipsec.d/cacerts/certificate.pem &&
+         ln -s /etc/letsencrypt/live/"{{ domain_name }}"/fullchain.pem /etc/strongswan/ipsec.d/cacerts/fullchain.pem &&
+         ln -s /etc/letsencrypt/live/"{{ domain_name }}"/privkey.pem /etc/strongswan/ipsec.d/private/key.pem &&
+ 
 - name: download /etc/strongswan/ipsec.secrects (roadwarriors users)
   get_url:
     url: https://github.com/alvic2000/gitinsky/blob/fd2da921342ed851e751f88da7da10d8fd75bac1/ipsec.secrets
@@ -49,17 +48,13 @@
   lineinfile:
     path: /etc/strongswan/ipsec.secrects
     regexp: 'domain.example.com'
-    line: "{{ item }}"
-  loop:
-    - domain.example.com
+    line: "{{ domain_name }}"
 
 - name: Replace a FQDN entry with our own
   lineinfile:
     path: /etc/strongswan/ipsec.conf
     regexp: 'domain.example.com'
-    line: "{{ item }}"
-  loop:
-    - domain.example.com
+    line: "{{ domain_name }}"
 
 - name: Restart strongswan to pick up configuration changes
   service:
