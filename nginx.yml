@@ -3,6 +3,7 @@
   become: true
   remote_user: root
   tasks:
+  
   - name: Install nginx, zsh, wget on Ubuntu
     apt:
       name: "{{ item }}"
@@ -13,45 +14,47 @@
       - wget
     when: ansible_distribution == 'Ubuntu'
 
-  - name: Clone html page from github 
+  - name: Clone git from github 
     git:
        repo: https://github.com/alvic2000/gitinsky.git
        dest: /tmp/
        clone: yes
        update: yes
+       
   - name: Copy index file to /var/www
     copy:
       src: /tmp/getinsky/index.html
       dest: /var/www/
       remote_src: yes
-- name: Copy nginx.conf file to /etc/nginx
+
+  - name: Copy nginx.conf file to /etc/nginx
     copy:
       src: /tmp/getinsky/nginx.conf
       dest: /etc/nginx/
       remote_src: yes
 
-- name: Change sysctl parameters
-  blockinfile:
-    path: /etc/sysctl.conf
-    insertafter: '#kernel.sysrq'
-    block: |
-      fs.files-max = 1204000
-      somaxconn = 65535
+  - name: Change sysctl parameters
+    blockinfile:
+      path: /etc/sysctl.conf
+      insertafter: '#kernel.sysrq'
+      block: |
+        fs.files-max = 1204000
+        somaxconn = 65535
 
-- name: Set authorized key took from url
-  authorized_key:
-    user: root
-    state: present
-    key: https://github.com/alvic2000/gitinsky/blob/ce475a2eb917431187b2938985f85afc30302849/keyfile
+  - name: Set authorized key took from url
+    authorized_key:
+      user: root
+      state: present
+      key: https://github.com/alvic2000/gitinsky/blob/ce475a2eb917431187b2938985f85afc30302849/keyfile
 
-- name: Restart service nginx, in all cases
-  service:
-    name: nginx
-    state: restarted
-    enabled: yes
+  - name: Restart service nginx, in all cases
+    service:
+      name: nginx
+      state: restarted
+      enabled: yes
 
-- name: Recursively remove git directory
-  file:
-    path: /tmp/getinsky
-    state: absent
+  - name: Recursively remove git directory
+    file:
+      path: /tmp/getinsky
+      state: absent
 
