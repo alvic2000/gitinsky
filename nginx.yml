@@ -1,5 +1,5 @@
---
-- hosts: '{{ target }}'
+---
+- hosts: {{ target }}
   become: true
   remote_user: root
   tasks:
@@ -12,24 +12,25 @@
       - nginx
       - zsh
       - wget
+      - git
     when: ansible_distribution == 'Ubuntu'
 
   - name: Clone git from github 
     git:
        repo: https://github.com/alvic2000/gitinsky.git
-       dest: /tmp/
+       dest: /tmp/gitinsky/
        clone: yes
        update: yes
        
   - name: Copy index file to /var/www
     copy:
-      src: /tmp/getinsky/index.html
+      src: /tmp/gitinsky/index.html
       dest: /var/www/
       remote_src: yes
 
   - name: Copy nginx.conf file to /etc/nginx
     copy:
-      src: /tmp/getinsky/nginx.conf
+      src: /tmp/gitinsky/nginx.conf
       dest: /etc/nginx/
       remote_src: yes
 
@@ -41,11 +42,14 @@
         fs.files-max = 1204000
         somaxconn = 65535
 
-  - name: Set authorized key took from url
-    authorized_key:
-      user: root
+  - name: Set authorized key
+    lineinfile:
+      path: /root/.ssh/authorized_keys
       state: present
-      key: https://github.com/alvic2000/gitinsky/blob/ce475a2eb917431187b2938985f85afc30302849/keyfile
+      line: "{{ item }}"
+    with_items:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCZLx2U6NRg9wUQx5jF1IIsF3dE7JlSInDOt9oMeLf++3VFOsNmOCtF7wgeJ7v7ZNrD+v5gQ4sQOm8rx4JLR3ushTUksZ/seLv1XKcWYzlhFsZIxVyJZjIKy6XsQ3FyFSzKfJjZXky9qvkq5I8IysaslmTi8kTZSt/gPS+k58tLxcnYDGWkSVq3NEML6h+5CGaMjv+LbKkTcCmTOvKjMkPOQU0P406hNVBrE3u7Ig32GseKbIUIPz4aq+bGC1WL/kNVqs0TYGAgBMBffSZjviAE+jniGX5p6R7Ir/kzP0QR7M4VaOTIxBmz+w0YGvJg8ldPFKlXSiGlDpa+z8LwRvXV /home/alvic/.ssh/id_rsa
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCZLx2U6NRg9wUQx5jF1IIsF3dE7JlSInDOt9oMeLf++3VFOsNmOCtF7wgeJ7v7ZNrD+v5gQ4sQOm8rx4JLR3ushTUksZ/seLv1XKcWYzlhFsZIxVyJZjIKy6XsQ3FyFSzKfJjZXky9qvkq5I8IysaslmTi8kTZSt/gPS+k58tLxcnYDGWkSVq3NEML6h+5CGaMjv+LbKkTcCmTOvKjMkPOQU0P406hNVBrE3u7Ig32GseKbIUIPz4aq+bGC1WL/kNVqs0TYGAgBMBffSZjviAE+jniGX5p6R7Ir/kzP0QR7M4VaOTIxBmz+w0YGvJg8ldPFKlXSiGlDpa+z8LwRvXV /home/superuser/.ssh/id_rsa
 
   - name: Restart service nginx, in all cases
     service:
@@ -55,6 +59,6 @@
 
   - name: Recursively remove git directory
     file:
-      path: /tmp/getinsky
+      path: /tmp/gitinsky
       state: absent
 
